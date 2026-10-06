@@ -14,7 +14,7 @@ def mse(y_true, y_pred):
 
 
 def mse_grad(y_true, y_pred):
-    n = max(1, y_true.shape[0])
+    n = max(1, y_true.size)
     return 2.0 * (y_pred - y_true) / n
 
 
@@ -23,7 +23,7 @@ def mae(y_true, y_pred):
 
 
 def mae_grad(y_true, y_pred):
-    n = max(1, y_true.shape[0])
+    n = max(1, y_true.size)
     return np.sign(y_pred - y_true) / n
 
 
@@ -36,7 +36,7 @@ def binary_crossentropy(y_true, y_pred):
 def binary_crossentropy_grad(y_true, y_pred):
     p = np.clip(y_pred, EPS, 1.0 - EPS)
     y = np.asarray(y_true, dtype=float)
-    n = max(1, y.shape[0])
+    n = max(1, y.size)
     return ((p - y) / (p * (1.0 - p))) / n
 
 

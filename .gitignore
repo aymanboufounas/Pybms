@@ -7,3 +7,7 @@ venv/
 dist/
 build/
 *.egg-info/
+.coverage
+htmlcov/
+.ruff_cache/
+artifacts/

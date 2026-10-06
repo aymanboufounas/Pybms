@@ -90,13 +90,21 @@ def ensure_2d_x(X):
         )
     if not np.all(np.isfinite(X)):
         raise ValueError("X contains NaN or infinite values. Clean the data before training.")
+    if not X.size or not len(X):
+        raise ValueError("X must contain rows and features.")
     return X
 
 
 def infer_task(y):
     y_arr = np.asarray(y)
     if y_arr.ndim == 2 and y_arr.shape[1] > 1:
-        return "multiclass"
+        if (
+            np.issubdtype(y_arr.dtype, np.number)
+            and np.all(np.isin(y_arr, [0, 1]))
+            and np.allclose(y_arr.sum(axis=1), 1)
+        ):
+            return "multiclass"
+        return "regression"
 
     flat = y_arr.reshape(-1)
     if flat.size == 0:
@@ -105,6 +113,8 @@ def infer_task(y):
     if unique.size == 2:
         return "binary"
 
+    if not np.issubdtype(flat.dtype, np.number):
+        return "multiclass"
     is_integer_like = np.all(np.isclose(flat, np.round(flat)))
     if is_integer_like and unique.size <= max(20, int(np.sqrt(max(4, flat.size))) + 2):
         return "multiclass"
@@ -112,11 +122,21 @@ def infer_task(y):
 
 
 def one_hot(y, num_classes=None):
-    y = np.asarray(y).reshape(-1).astype(int)
+    raw = np.asarray(y).reshape(-1)
+    if (
+        not raw.size
+        or not np.issubdtype(raw.dtype, np.number)
+        or not np.isfinite(raw).all()
+        or not np.allclose(raw, np.round(raw))
+    ):
+        raise ValueError("Class labels must be nonempty finite integers.")
+    y = raw.astype(int)
     if np.any(y < 0):
         raise ValueError("Class labels must be non-negative integers.")
     if num_classes is None:
         num_classes = int(y.max()) + 1
+    if num_classes <= int(y.max()):
+        raise ValueError("num_classes must exceed the largest label.")
     out = np.zeros((len(y), num_classes), dtype=float)
     out[np.arange(len(y)), y] = 1.0
     return out

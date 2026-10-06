@@ -1,16 +1,22 @@
 from __future__ import annotations
 
 import numpy as np
-from .exceptions import UnknownOptimizerError
+from .exceptions import ConfigurationError, UnknownOptimizerError
 from .utils import canonical_name
 
 
 class SGD:
+    """Mini-batch gradient descent with optional momentum in [0,1)."""
+
     name = "sgd"
 
     def __init__(self, lr=0.01, learning_rate=None, momentum=0.0):
         self.lr = float(learning_rate if learning_rate is not None else lr)
         self.momentum = float(momentum)
+        if not np.isfinite(self.lr) or self.lr <= 0 or not 0 <= self.momentum < 1:
+            raise ConfigurationError(
+                "SGD needs positive finite learning rate and momentum in [0,1)."
+            )
         self.velocity = {}
 
     def step(self, layers):
@@ -32,6 +38,8 @@ class SGD:
 
 
 class Adam:
+    """Adaptive first/second moment optimizer with bias correction."""
+
     name = "adam"
 
     def __init__(self, lr=0.001, learning_rate=None, beta1=0.9, beta2=0.999, eps=1e-8):
@@ -39,6 +47,15 @@ class Adam:
         self.beta1 = beta1
         self.beta2 = beta2
         self.eps = eps
+        if (
+            not np.isfinite(self.lr)
+            or self.lr <= 0
+            or not 0 <= beta1 < 1
+            or not 0 <= beta2 < 1
+            or not np.isfinite(eps)
+            or eps <= 0
+        ):
+            raise ConfigurationError("Adam needs positive finite lr/eps and beta1/beta2 in [0,1).")
         self.t = 0
         self.m = {}
         self.v = {}
@@ -57,8 +74,8 @@ class Adam:
                 v = self.beta2 * v + (1.0 - self.beta2) * (grad * grad)
                 self.m[key] = m
                 self.v[key] = v
-                m_hat = m / (1.0 - self.beta1 ** self.t)
-                v_hat = v / (1.0 - self.beta2 ** self.t)
+                m_hat = m / (1.0 - self.beta1**self.t)
+                v_hat = v / (1.0 - self.beta2**self.t)
                 setattr(layer, name, param - self.lr * m_hat / (np.sqrt(v_hat) + self.eps))
 
 

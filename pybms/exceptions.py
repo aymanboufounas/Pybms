@@ -3,44 +3,44 @@ class PyBMSError(Exception):
 
 
 class ConfigurationError(PyBMSError):
-    pass
+    """An option, task, optimizer parameter or persistence choice is invalid."""
 
 
 class DataError(PyBMSError):
-    pass
+    """A table, target, numeric array, file or URL cannot be used as supplied."""
 
 
 class ShapeError(PyBMSError):
-    pass
+    """Array dimensions or target/prediction shapes do not match."""
 
 
 class InvalidLayerError(PyBMSError):
-    pass
+    """A layer specification is not supported by the native dense model."""
 
 
 class UnknownActivationError(PyBMSError):
-    pass
+    """An activation is not among linear/relu/sigmoid/tanh/softmax."""
 
 
 class UnknownLossError(PyBMSError):
-    pass
+    """A loss is not among mse/mae/binary/categorical cross-entropy."""
 
 
 class UnknownOptimizerError(PyBMSError):
-    pass
+    """An optimizer is not SGD/Adam or an object with a step method."""
 
 
 class ModelNotBuiltError(PyBMSError):
-    pass
+    """Build/add/fit is needed before the requested native model operation."""
 
 
 class ModelNotCompiledError(PyBMSError):
-    pass
+    """Compile or fit is required before evaluating loss."""
 
 
 class TrainingError(PyBMSError):
-    pass
+    """Optimization diverged, training arguments are invalid, or all candidates failed."""
 
 
 class NotSupportedError(PyBMSError):
-    pass
+    """A feature or file format is unsupported, or an optional reader is missing."""

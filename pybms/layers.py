@@ -7,6 +7,12 @@ from .utils import pop_fuzzy
 
 
 class Dense:
+    """Fully connected layer with trainable weights, bias and activation.
+
+    units must be a positive integer. Supported activations are linear, relu,
+    sigmoid, tanh and softmax. input_dim can be inferred on the first build.
+    """
+
     def __init__(self, units=None, activation="linear", input_dim=None, **kwargs):
         if units is None:
             units = pop_fuzzy(kwargs, "units", aliases=("unit", "neurons", "nodes", "output_size"))
@@ -26,15 +32,21 @@ class Dense:
             raise TypeError(f"Unknown Dense arguments: {', '.join(kwargs)}")
         if units is None:
             raise TypeError("Dense needs 'units', e.g. Dense(16, activation='relu').")
-        try:
-            units = int(units)
-        except Exception as exc:
-            raise TypeError("Dense units must be an integer.") from exc
+        if isinstance(units, bool) or not isinstance(units, (int, np.integer)):
+            raise TypeError("Dense units must be an integer.")
+        units = int(units)
         if units <= 0:
             raise ValueError("Dense units must be > 0.")
 
         self.units = units
+        if input_dim is not None and (
+            isinstance(input_dim, bool)
+            or not isinstance(input_dim, (int, np.integer))
+            or input_dim <= 0
+        ):
+            raise ShapeError("input_dim must be a positive integer.")
         self.input_dim = int(input_dim) if input_dim is not None else None
+        self.rng = None
         self.activation_name, self.activation, _ = get_activation(activation)
         self.W = None
         self.b = None
@@ -56,7 +68,11 @@ class Dense:
             scale = np.sqrt(2.0 / input_dim)
         else:
             scale = np.sqrt(1.0 / input_dim)
-        self.W = np.random.randn(input_dim, self.units) * scale
+        self.W = (
+            np.random.randn(input_dim, self.units)
+            if self.rng is None
+            else self.rng.normal(size=(input_dim, self.units))
+        ) * scale
         self.b = np.zeros((1, self.units), dtype=float)
         return self
 
@@ -68,9 +84,7 @@ class Dense:
         if not self.built:
             self.build(x.shape[1])
         if x.shape[1] != self.input_dim:
-            raise ShapeError(
-                f"Dense expected {self.input_dim} features but received {x.shape[1]}."
-            )
+            raise ShapeError(f"Dense expected {self.input_dim} features but received {x.shape[1]}.")
         z = x @ self.W + self.b
         a = self.activation(z)
         if training:

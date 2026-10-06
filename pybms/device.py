@@ -6,7 +6,7 @@ import platform
 def device(verbose=True):
     """Return the current execution device.
 
-    Pybms 0.1 uses NumPy, so computation is CPU-based.
+    Native Pybms networks use NumPy, so computation is CPU-based.
     """
     info = {
         "device": "cpu",
